@@ -402,10 +402,12 @@ function saveS(){localStorage.setItem('ac_s', JSON.stringify(S))}
 function loadS(){const r=localStorage.getItem('ac_s');if(r)S={...S,...JSON.parse(r)}}
 
 // ── DATE HELPERS ─────────────────────────────────────────────
+const TEST_MODE=new URLSearchParams(location.search).has('test');
 function dayStatus(i){
+  if(S.completedDays.includes(i+1))return'completed';
+  if(TEST_MODE)return'available';
   const today=new Date();today.setHours(0,0,0,0);
   const dd=new Date(START);dd.setDate(dd.getDate()+i);
-  if(S.completedDays.includes(i+1))return'completed';
   if(today>=dd)return'available';
   return'locked';
 }
