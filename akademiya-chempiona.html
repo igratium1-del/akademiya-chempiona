@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Академія Чемпіона ⚽</title>
+<style>
+:root{--gold:#FFD700;--gold2:#FFA500;--cyan:#00d4ff;--green:#00c851;--bg1:#0a0a1a;--bg2:#1a1a3e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg1) 100%);color:#fff;font-family:'Segoe UI',Tahoma,sans-serif;min-height:100vh}
+
+/* HEADER */
+header{background:linear-gradient(90deg,#0d0d2b,#1a1a4e,#0d0d2b);padding:16px 20px;text-align:center;border-bottom:2px solid #0f3460;position:sticky;top:0;z-index:100}
+.title{font-size:1.9em;font-weight:bold;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.level-display{font-size:1em;color:var(--cyan);margin:6px 0 4px}
+.xp-bar-wrap{background:rgba(255,255,255,.1);border-radius:10px;height:16px;max-width:480px;margin:0 auto 4px;overflow:hidden;border:1px solid rgba(0,212,255,.3)}
+.xp-bar{height:100%;background:linear-gradient(90deg,var(--cyan),#0095ff);border-radius:10px;transition:width .5s;position:relative;overflow:hidden}
+.xp-bar::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:xpshine 2s infinite}
+@keyframes xpshine{to{left:100%}}
+.xp-text{font-size:.82em;color:#aaa;margin-bottom:8px}
+.badges-wrap{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:2px 9px;font-size:.75em;color:#777}
+.badge.earned{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:var(--gold);color:#000;font-weight:bold}
+
+/* MAIN */
+main{padding:18px;max-width:1100px;margin:0 auto}
+.cal-header{text-align:center;margin-bottom:16px}
+.cal-header h2{font-size:1.4em;color:var(--gold);margin-bottom:3px}
+.cal-header p{color:#aaa;font-size:.85em}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+@media(max-width:860px){.grid{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:repeat(3,1fr)}.title{font-size:1.3em}}
+
+.cell{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:13px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .25s;position:relative;min-height:95px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cell.locked{animation:plocked 3s infinite;cursor:not-allowed;opacity:.55}
+@keyframes plocked{0%,100%{border-color:rgba(255,255,255,.1)}50%{border-color:rgba(255,255,255,.18)}}
+.cell.available{border-color:var(--gold);background:rgba(255,215,0,.08);animation:pavail 1.8s infinite}
+@keyframes pavail{0%,100%{box-shadow:0 0 6px rgba(255,215,0,.3);transform:scale(1)}50%{box-shadow:0 0 22px rgba(255,215,0,.7);transform:scale(1.03)}}
+.cell.available:hover{animation:none;transform:scale(1.09)!important;box-shadow:0 0 30px rgba(255,215,0,.85);border-color:var(--gold2)}
+.cell.completed{border-color:var(--green);background:rgba(0,200,81,.08)}
+.cell.completed:hover{transform:scale(1.05);box-shadow:0 0 20px rgba(0,200,81,.45)}
+.cell-num{font-size:1.2em;font-weight:bold;color:#bbb}
+.cell.available .cell-num{color:var(--gold)}
+.cell.completed .cell-num{color:var(--green)}
+.cell-emoji{font-size:1.9em;margin:4px 0}
+.cell.locked .cell-emoji{filter:grayscale(1)}
+.cell-name{font-size:.65em;color:#999;overflow:hidden;white-space:nowrap;width:100%;text-overflow:ellipsis}
+.cell.available .cell-name{color:var(--gold)}
+.cell.completed .cell-name{color:var(--green)}
+.cell-date{font-size:.6em;color:#666;margin-top:2px}
+.corner-icon{position:absolute;top:4px;right:5px;font-size:.78em}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;justify-content:center;align-items:center;padding:16px}
+.overlay.on{display:flex}
+.modal{background:linear-gradient(135deg,#0d0d2b,#1a1a4e);border:2px solid var(--gold);border-radius:18px;padding:26px 22px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
+.mcls{position:absolute;top:12px;right:16px;font-size:1.4em;cursor:pointer;color:#888;background:none;border:none;transition:color .2s}
+.mcls:hover{color:#fff}
+
+/* PLAYER CARD */
+.pcard{text-align:center;margin-bottom:16px}
+.pemoji{font-size:4.5em;display:block;margin-bottom:6px}
+.pname{font-size:1.7em;font-weight:bold;background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pmeta{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+.ptag{background:rgba(255,255,255,.1);border-radius:9px;padding:3px 11px;font-size:.85em;color:#ddd}
+.sec{color:var(--cyan);font-size:.92em;font-weight:bold;margin-bottom:6px;margin-top:14px}
+.fbox{border-left:3px solid var(--cyan);padding:10px 12px;border-radius:0 9px 9px 0;font-size:.88em;color:#ddd;line-height:1.55;background:rgba(0,212,255,.04)}
+.ffbox{border-left:3px solid #ff6b00;padding:10px 12px;border-radius:0 9px 9px 0;font-size:.88em;color:#ddd;line-height:1.55;background:rgba(255,107,0,.04);margin-top:10px}
+.qbox{border:2px solid var(--gold);border-radius:13px;padding:13px;margin-top:14px}
+.qtitle{color:var(--gold);font-weight:bold;margin-bottom:4px}
+.qdesc{color:#ddd;font-size:.88em;line-height:1.55;margin-bottom:8px}
+.qxp{font-size:.82em;color:var(--cyan)}
+.done-ind{text-align:center;color:var(--green);font-weight:bold;margin:8px 0}
+
+/* BUTTONS */
+.btn{border:none;border-radius:10px;padding:11px 22px;font-size:.95em;font-weight:bold;cursor:pointer;transition:all .25s;width:100%;margin-top:10px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000}
+.btn-gold:hover{transform:scale(1.03);box-shadow:0 4px 18px rgba(255,215,0,.5)}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0095ff);color:#000}
+.btn-green{background:linear-gradient(135deg,var(--green),#00903a);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* MINI-GAME AREA */
+.mga{background:rgba(0,0,0,.28);border-radius:13px;padding:16px;margin-top:12px}
+.gscore{text-align:center;font-size:1.4em;font-weight:bold;color:var(--gold);margin-bottom:6px}
+.gtimer{text-align:center;font-size:.95em;color:var(--cyan);margin-bottom:8px}
+
+/* HIT BALL */
+.ball-area{position:relative;height:260px;overflow:hidden;background:linear-gradient(135deg,#0a2a0a,#1a3a1a);border-radius:10px;border:2px solid #2a5a2a}
+.ball{position:absolute;font-size:2em;cursor:pointer;user-select:none;animation:bpop .25s ease;transition:transform .1s}
+.ball:active{transform:scale(.8)}
+@keyframes bpop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* MEMORY */
+.mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.mcard{aspect-ratio:1;cursor:pointer;perspective:900px}
+.mcard-in{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .38s}
+.mcard.flip .mcard-in,.mcard.match .mcard-in{transform:rotateY(180deg)}
+.mcard-f,.mcard-b{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.7em}
+.mcard-f{background:linear-gradient(135deg,#1a1a4e,#0d0d2b);border:2px solid rgba(255,255,255,.18);color:#555}
+.mcard-b{background:linear-gradient(135deg,#0f3460,#16213e);border:2px solid var(--gold);transform:rotateY(180deg)}
+.mcard.match .mcard-b{background:linear-gradient(135deg,#00c851,#007a30);border-color:var(--green)}
+
+/* QUIZ */
+.qprog{text-align:center;color:#888;font-size:.82em;margin-bottom:8px}
+.qqst{font-size:1.05em;font-weight:bold;color:var(--gold);margin-bottom:12px;text-align:center;line-height:1.45}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:420px){.qopts{grid-template-columns:1fr}}
+.qopt{background:rgba(255,255,255,.09);border:2px solid rgba(255,255,255,.18);border-radius:9px;padding:11px 8px;cursor:pointer;font-size:.88em;color:#ddd;transition:all .25s;text-align:center;line-height:1.4}
+.qopt:hover{background:rgba(255,255,255,.18);border-color:var(--gold)}
+.qopt.ok{background:rgba(0,200,81,.2);border-color:var(--green);color:var(--green)}
+.qopt.no{background:rgba(255,0,0,.18);border-color:#f44;color:#f66}
+.qfeed{text-align:center;min-height:28px;margin-top:8px;font-size:.95em}
+
+/* NOTIFICATIONS */
+.xp-notif{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:bold;padding:9px 22px;border-radius:22px;font-size:1.1em;z-index:10000;animation:npop 2.2s forwards;pointer-events:none}
+.badge-notif{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;font-weight:bold;padding:14px 24px;border-radius:14px;text-align:center;z-index:10000;animation:npop 3.2s forwards;border:2px solid var(--gold);pointer-events:none}
+.champ-notif{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#7c3aed,#1a1a4e);color:#fff;font-weight:bold;padding:28px 38px;border-radius:18px;text-align:center;z-index:10001;animation:npop 5s forwards;border:3px solid var(--gold);pointer-events:none;font-size:1.2em}
+@keyframes npop{0%{transform:translateX(-50%) scale(0);opacity:0}15%{transform:translateX(-50%) scale(1.15);opacity:1}25%{transform:translateX(-50%) scale(1);opacity:1}85%{opacity:1}100%{opacity:0}}
+
+/* CONFETTI */
+.conf-wrap{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.cp{position:absolute;animation:cfall linear forwards}
+@keyframes cfall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* DAY HEADER */
+.modal-dh{text-align:center;margin-bottom:4px;color:#999;font-size:.88em}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">🏆 Академія Чемпіона ⚽</div>
+  <div class="level-display" id="lvlDisp">Рівень 1 — Новачок</div>
+  <div class="xp-bar-wrap"><div class="xp-bar" id="xpBar" style="width:0%"></div></div>
+  <div class="xp-text" id="xpTxt">0 / 200 XP</div>
+  <div class="badges-wrap" id="bdgWrap"></div>
+</header>
+
+<main>
+  <div class="cal-header">
+    <h2>30 Днів до Чемпіона</h2>
+    <p>Старт: 18 березня 2026 &bull; Виконуй вправи щодня</p>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <button class="mcls" onclick="closeModal()">✕</button>
+    <div id="mcontent"></div>
+  </div>
+</div>
+
+<div class="conf-wrap" id="confWrap"></div>
+
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────
+const START = new Date('2026-03-18T00:00:00');
+
+const LEVELS = [
+  {name:'Новачок',      xp:0},
+  {name:'Юний гравець', xp:200},
+  {name:'Гравець',      xp:500},
+  {name:'Чемпіон',      xp:900},
+  {name:'Легенда',      xp:1400}
+];
+
+const BADGE_DEFS = [
+  {day:3,  icon:'🥉', name:'Перший крок',   desc:'3 дні виконано'},
+  {day:7,  icon:'⭐', name:'Тиждень гравця', desc:'7 днів виконано'},
+  {day:14, icon:'🌟', name:'Два тижні',      desc:'14 днів виконано'},
+  {day:21, icon:'💫', name:'Три тижні',      desc:'21 день виконано'},
+  {day:30, icon:'🏆', name:'ЧЕМПІОН!',       desc:'Всі 30 днів!'}
+];
+
+// ── DAYS DATA ────────────────────────────────────────────────
+const DAYS = [
+  // Week 1
+  {d:1, p:'Ліонель Мессі',       e:'⭐', c:'🇦🇷 Аргентина',  pos:'Нападник',
+   pf:'Мессі виграв рекордні 8 Золотих м\'ячів. Він почав грати у 5 років, а у 10 вже підписав контракт з Барселоною.',
+   ff:'⚽ Перший офіційний матч відбувся у 1872 р. між Шотландією та Англією.',
+   q:'Зроби 20 ударів ногою по м\'ячу об стіну. Ти — Мессі!',
+   qxp:50, bxp:75, mg:null},
+
+  {d:2, p:'Кріштіану Роналду',   e:'🔥', c:'🇵🇹 Португалія', pos:'Нападник',
+   pf:'Роналду забив понад 900 голів у кар\'єрі. Він тренується навіть у дні відпочинку і спить 5 разів на день по 1.5 год.',
+   ff:'⚽ Найшвидший гол в історії забили за 2 секунди після стартового свистка.',
+   q:'Виконай 30 присідань. Ноги чемпіона — сильні ноги!',
+   qxp:50, bxp:75, mg:null},
+
+  {d:3, p:'Кіліан Мбаппе',       e:'⚡', c:'🇫🇷 Франція',    pos:'Нападник',
+   pf:'Мбаппе — найшвидший гравець ЛЧ! Він досягає 36 км/год. У 19 р. став чемпіоном світу.',
+   ff:'⚽ Швидкість польоту м\'яча при сильному ударі — до 200 км/год!',
+   q:'Пробіжи 100 м якомога швидше. Уявляй, що ти Мбаппе!',
+   qxp:55, bxp:80, mg:'hitball'},
+
+  {d:4, p:'Ерлінг Холанн',       e:'🚀', c:'🇳🇴 Норвегія',   pos:'Нападник',
+   pf:'Холанн забив 36 голів у першому сезоні в Ман. Сіті — рекорд АПЛ. Його зріст 194 см.',
+   ff:'⚽ Штрафна площа у футболі — 40.32 м × 16.5 м. Тут відбувається більшість голів.',
+   q:'Постав 3 предмети як стійки і відпрацюй точний удар — 5 разів у "ворота"!',
+   qxp:55, bxp:80, mg:null},
+
+  {d:5, p:'Неймар',              e:'🌟', c:'🇧🇷 Бразилія',   pos:'Нападник',
+   pf:'Неймар — майстер дриблінгу. Він може виконати понад 20 різних технічних прийомів.',
+   ff:'⚽ Бразилія — єдина країна, яка брала участь у всіх 22 чемпіонатах світу.',
+   q:'Спробуй обвести предмет з м\'ячем. Зроби це 10 разів з кожної ноги.',
+   qxp:60, bxp:85, mg:null},
+
+  {d:6, p:'Роналдіньо',          e:'😁', c:'🇧🇷 Бразилія',   pos:'Атак. півзахисник',
+   pf:'Роналдіньо виграв Золотий м\'яч у 2005 р. та ЧС у 2002 р. Відомий магічним дриблінгом і незвичайною посмішкою.',
+   ff:'⚽ Термін "хет-трик" прийшов з крикету — три голи одного гравця в матчі.',
+   q:'Спробуй жонглювати м\'ячем ногою. Скільки разів поспіль зможеш?',
+   qxp:60, bxp:85, mg:null},
+
+  {d:7, p:'Пеле',                e:'👑', c:'🇧🇷 Бразилія',   pos:'Нападник',
+   pf:'Пеле — король футболу! 1281 гол за кар\'єру, тричі чемпіон світу. Перший ЧС виграв у 17 років!',
+   ff:'⚽ Чемпіонат світу з футболу проводиться кожні 4 роки з 1930 року.',
+   q:'Пограй у футбол 15 хвилин або потренуй удари. Стань чемпіоном як Пеле!',
+   qxp:65, bxp:90, mg:null},
+
+  // Week 2
+  {d:8, p:'Андрій Шевченко',     e:'🇺🇦', c:'🇺🇦 Україна',   pos:'Нападник',
+   pf:'Шевченко — найкращий футболіст України! Золотий м\'яч 2004 р. За Мілан — 173 голи і ЛЧ 2003.',
+   ff:'⚽ Збірна України вперше вийшла до чвертьфіналу ЧС у 2006 р. в Німеччині.',
+   q:'Уяви себе Шевченком і виконай 10 ударів по воротах з правої ноги!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:9, p:'Мохамед Салах',       e:'🦁', c:'🇪🇬 Єгипет',     pos:'Крайній нападник',
+   pf:'Салах — "Єгипетський Король". У сезоні 2017/18 він забив рекордні 32 голи в АПЛ за один сезон.',
+   ff:'⚽ Ліверпуль виграв Лігу чемпіонів 6 разів, останній — у 2019 році.',
+   q:'Зроби 15 ударів лівою (або нелюбленою) ногою. Тренуй слабку ногу!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:10, p:'Вінісіус Жуніор',    e:'💃', c:'🇧🇷 Бразилія',   pos:'Крайній нападник',
+   pf:'Вінісіус — зірка Реал Мадрид! Знаменитий своїм танцем після голів. У 2024 р. посів 2 місце у Золотому м\'ячі.',
+   ff:'⚽ Реал Мадрид — найтитулованіший клуб у ЛЧ: 15 трофеїв.',
+   q:'Потанцюй після уявного голу! А потім зроби 20 швидких ведень м\'яча.',
+   qxp:70, bxp:95, mg:'memory'},
+
+  {d:11, p:'Джуд Беллінгем',     e:'💎', c:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Англія',    pos:'Півзахисник',
+   pf:'Беллінгем — один з найдорожчих трансферів (€103 млн). У першому сезоні в Реалі забив 23 голи і виграв ЛЧ.',
+   ff:'⚽ Рекордний трансфер — Мбаппе в Реал Мадрид за €180 млн у 2024 р.',
+   q:'Уяви, що ти Беллінгем. Пробіжи 5 разів по 20 м у різних напрямках!',
+   qxp:70, bxp:95, mg:null},
+
+  {d:12, p:'Ламін Ямаль',        e:'🌠', c:'🇪🇸 Іспанія',    pos:'Крайній нападник',
+   pf:'Ямаль — наймолодший гравець в історії Євро! На Євро-2024 забив неймовірний гол у півфіналі. Йому було 17!',
+   ff:'⚽ Іспанія — перша команда, яка виграла 3 Євро поспіль (2008, 2012, 2024).',
+   q:'Зроби 5 точних передач поспіль — так, щоб м\'яч потрапив у ціль щоразу.',
+   qxp:70, bxp:95, mg:null},
+
+  {d:13, p:'Педрі',              e:'🎯', c:'🇪🇸 Іспанія',    pos:'Центр. півзахисник',
+   pf:'Педрі — майстер паса. Точність передач понад 92% — одна з найкращих у світі. Двічі виграв Kopa Trophy.',
+   ff:'⚽ Іспанська Ла Ліга — одна з найпрестижніших ліг, заснована у 1929 р.',
+   q:'Передай м\'яч другові або вдар об стіну 15 разів без зупинки. Точність важливіша за силу!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:14, p:'Філ Фоден',          e:'🌹', c:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Англія',    pos:'Атак. півзахисник',
+   pf:'Фоден — вихованець Ман. Сіті. Виграв 6 чемпіонатів АПЛ та ЛЧ 2023. У 2024 р. став найкращим гравцем АПЛ!',
+   ff:'⚽ Манчестер Сіті виграв 6 чемпіонатів АПЛ підряд у 2021–2024 роках.',
+   q:'День 14 — ти вже два тижні тренуєшся! Зроби улюблену активність 15 хвилин — святкуй!',
+   qxp:80, bxp:100, mg:null},
+
+  // Week 3
+  {d:15, p:'Букайо Сака',        e:'🎸', c:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Англія',    pos:'Крайній нападник',
+   pf:'Сака — лідер Арсенала у 22 роки. Відомий впевненістю та технічними прийомами в обох напрямках.',
+   ff:'⚽ Арсенал збудував перший сучасний стадіон у Лондоні ще у 1913 р.',
+   q:'Пробіжи зигзагом між 5 предметами. Повтори 5 разів якомога швидше!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:16, p:'Гаві',               e:'🎪', c:'🇪🇸 Іспанія',    pos:'Центр. півзахисник',
+   pf:'Гаві — найталановитіший молодий гравець Барси з часів Мессі. У 17 р. вже грав за збірну Іспанії.',
+   ff:'⚽ Барселона виграла ЛЧ 5 разів. Їх стиль "тікі-така" змінив футбол.',
+   q:'Спробуй водити м\'яч між ніг ("тікі-така"). Зроби 10 коротких передач навколо себе.',
+   qxp:65, bxp:90, mg:null},
+
+  {d:17, p:'Федеріко Вальверде', e:'⚙️', c:'🇺🇾 Уругвай',   pos:'Півзахисник',
+   pf:'Вальверде — "двигун" Реал Мадрид. Може грати на будь-якій позиції, відомий сильними ударами здалеку.',
+   ff:'⚽ Уругвай — перший чемпіон світу (1930). Маленька країна, великий футбол!',
+   q:'Вдар м\'яч здалеку — з 10+ метрів. Влучи в ціль 3 рази з 10 спроб!',
+   qxp:70, bxp:95, mg:'quiz'},
+
+  {d:18, p:'Лука Модрич',        e:'🎻', c:'🇭🇷 Хорватія',   pos:'Центр. півзахисник',
+   pf:'Модрич у 2018 р. зупинив серію Мессі та Роналду і виграв Золотий м\'яч. 5 разів виграв ЛЧ з Реалом.',
+   ff:'⚽ Хорватія (4 млн людей) посіла 2 місце на ЧС-2018. Неймовірно!',
+   q:'Відпрацюй пас: 10 коротких і 10 довгих передач або ударів об стіну.',
+   qxp:70, bxp:95, mg:null},
+
+  {d:19, p:'Кевін Де Брюйне',    e:'🎯', c:'🇧🇪 Бельгія',    pos:'Атак. півзахисник',
+   pf:'Де Брюйне — найкращий "роздавач голевих передач". За сезон 20+ ГП. Його передачі — справжнє мистецтво.',
+   ff:'⚽ Голевий пас у футболі рахується з 1996 р. Де Брюйне — рекордсмен АПЛ.',
+   q:'Зроби точну передачу другові або в ціль з 7 м. Виконай 10 таких передач.',
+   qxp:70, bxp:95, mg:null},
+
+  {d:20, p:'Гаррі Кейн',         e:'🏹', c:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Англія',    pos:'Нападник',
+   pf:'Кейн — рекордсмен збірної Англії за голами (67+). Також відомий точністю з пенальті.',
+   ff:'⚽ Англія виграла єдиний чемпіонат світу у 1966 р. — вдома.',
+   q:'Відпрацюй пенальті! Стань на 11 м (або менше) і вдар у ворота 5 разів. Маєш влучити всі!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:21, p:'Роберт Льовандовський', e:'🦅', c:'🇵🇱 Польща',  pos:'Нападник',
+   pf:'Льовандовський у сезоні 2020/21 забив 41 гол у Бундеслізі — рекорд Мюллера, що стояв 49 років!',
+   ff:'⚽ Баварія виграла Бундеслігу 11 разів поспіль (2013–2023) — неймовірно!',
+   q:'21 день! Ти вже справжній гравець! Зроби 21 удар по воротах і святкуй!',
+   qxp:90, bxp:110, mg:null},
+
+  // Week 4
+  {d:22, p:'Карім Бензема',      e:'🦁', c:'🇫🇷 Франція',    pos:'Нападник',
+   pf:'Бензема виграв Золотий м\'яч у 2022 р. у 34 роки — один з найстарших в історії. 16 сезонів у Реалі.',
+   ff:'⚽ Реал Мадрид витратив понад €2 млрд на трансфери з 2000 по 2023 р.',
+   q:'Відпрацюй удар головою: зроби 15 стрибків і "удари головою" по уявному м\'ячу.',
+   qxp:70, bxp:95, mg:null},
+
+  {d:23, p:'Вірджил ван Дейк',   e:'🛡️', c:'🇳🇱 Нідерланди', pos:'Центр. захисник',
+   pf:'Ван Дейк у 2019 р. посів 2 місце у Золотому м\'ячі — рідкісність для захисника.',
+   ff:'⚽ Трофей ЛЧ важить 7.5 кг! Тримати важко, але перемогти — ще важче.',
+   q:'Сьогодні тренуєш захист! Відбий 10 "ударів" — реагуй якомога швидше.',
+   qxp:65, bxp:90, mg:null},
+
+  {d:24, p:'Родрі',              e:'🧠', c:'🇪🇸 Іспанія',    pos:'Опорний півзахисник',
+   pf:'Родрі — Золотий м\'яч 2024! Виграв Євро-2024 з Іспанією та ЛЧ з Ман. Сіті.',
+   ff:'⚽ Золотий м\'яч вручається з 1956 р. Мессі та Роналду разом виграли 13 разів!',
+   q:'Завдання на мозок: запам\'ятай 5 правил футболу і розкажи їх другу або батькам!',
+   qxp:75, bxp:100, mg:'quiz'},
+
+  {d:25, p:'Трент Александер-Арнольд', e:'🎭', c:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Англія', pos:'Правий захисник',
+   pf:'Трент — найкращий атакувальний захисник світу. Більше ГП, ніж більшість нападників! ЛЧ 2019, АПЛ 2020.',
+   ff:'⚽ Позиція "атакувальний захисник" з\'явилась у 2000-х і революціонізувала тактику.',
+   q:'Виконай подачу: вдар м\'яч по дузі. 8 подач з кожної ноги!',
+   qxp:70, bxp:95, mg:null},
+
+  {d:26, p:'Мануель Нойєр',      e:'🧤', c:'🇩🇪 Німеччина',  pos:'Воротар',
+   pf:'Нойєр — революціонер позиції воротаря. Вигадав стиль "воротар-зметальник". ЧС-2014 з Німеччиною.',
+   ff:'⚽ Воротар — єдиний, кому дозволено торкатись м\'яча руками (у своїй штрафній).',
+   q:'Сьогодні ти — воротар! Відбий 10 "уявних м\'ячів" — ухиляйся і стрибай!',
+   qxp:65, bxp:90, mg:null},
+
+  {d:27, p:'Серхіо Рамос',       e:'⚔️', c:'🇪🇸 Іспанія',    pos:'Центр. захисник',
+   pf:'Рамос — 5 ЛЧ, 4 Ла Ліги, 2 ЧС. Відомий голами в доданий час у найважливіших матчах.',
+   ff:'⚽ Додатковий час у футболі ввели у 1891 р. після спірного матчу.',
+   q:'Як капітан Рамос, веди команду! Зроби 25 прискорень на різній відстані.',
+   qxp:70, bxp:95, mg:null},
+
+  {d:28, p:'Паоло Мальдіні',     e:'🏛️', c:'🇮🇹 Італія',     pos:'Центр. захисник',
+   pf:'Мальдіні — легенда Мілана! 25 років у одному клубі. 5 ЛЧ, 7 чемпіонатів Серії А.',
+   ff:'⚽ Серія А — одна з найстаріших ліг Європи, заснована у 1898 р.',
+   q:'Вірність — це важливо! Потренуй улюблену вправу 20 хвилин — роби те, що вмієш найкраще.',
+   qxp:75, bxp:100, mg:null},
+
+  {d:29, p:'Зінедін Зідан',      e:'🎩', c:'🇫🇷 Франція',    pos:'Атак. півзахисник',
+   pf:'Зідан — найтехнічніший гравець за думкою більшості тренерів. "Розворот Зідана" — один з найкрасивіших прийомів. ЧС-1998, ЛЧ як гравець і тренер.',
+   ff:'⚽ "Roulette" (розворот Зідана) — обертання з м\'ячем навколо суперника.',
+   q:'Спробуй виконати розворот на місці з м\'ячем (або без) 10 разів. Як Зідан!',
+   qxp:75, bxp:100, mg:'hitball'},
+
+  {d:30, p:'Роналду Феномен',    e:'🌍', c:'🇧🇷 Бразилія',   pos:'Нападник',
+   pf:'Роналду (Феномен) — двічі Золотий м\'яч, двічі ЧС (1994, 2002). На ЧС-2002 забив 8 голів. Повернення після травми коліна — неймовірна мотивація для всього світу.',
+   ff:'🏆 ВІТАЄМО! Ти пройшов усі 30 днів і став справжнім ЧЕМПІОНОМ АКАДЕМІЇ!',
+   q:'🏆 ФІНАЛЬНИЙ КВЕСТ: Вигадай свій власний футбольний прийом, назви його і покажи батькам! Ти — ЧЕМПІОН!',
+   qxp:100, bxp:200, mg:null}
+];
+
+// ── QUIZ DATA ────────────────────────────────────────────────
+const QUIZZES = {
+  q17: [
+    {q:'Скільки гравців у кожній команді на полі?',
+     o:['9','10','11','12'], c:2},
+    {q:'Яка стандартна тривалість матчу?',
+     o:['60 хвилин','80 хвилин','90 хвилин','120 хвилин'], c:2},
+    {q:'Хто виграв найбільше Золотих м\'ячів?',
+     o:['Роналду','Мессі','Зідан','Неймар'], c:1},
+    {q:'З якої відстані б\'ють пенальті?',
+     o:['7 метрів','9 метрів','11 метрів','15 метрів'], c:2},
+    {q:'Яка країна виграла найбільше ЧС?',
+     o:['Аргентина','Іспанія','Бразилія','Німеччина'], c:2}
+  ],
+  q24: [
+    {q:'Як називається гра рукою в штрафній?',
+     o:['Кутовий','Штрафний','11-метровий','Аут'], c:2},
+    {q:'Хто є рекордсменом збірної Англії за голами?',
+     o:['Руні','Лінекер','Оуен','Кейн'], c:3},
+    {q:'Який клуб виграв найбільше ЛЧ?',
+     o:['Барселона','Реал Мадрид','Ліверпуль','Баварія'], c:1},
+    {q:'Що означає "офсайд"?',
+     o:['Удар у штангу','Гравець попереду лінії захисту','Гра рукою','Удар поза полем'], c:1},
+    {q:'Хто виграв ЧС-2022 в Катарі?',
+     o:['Франція','Бразилія','Іспанія','Аргентина'], c:3}
+  ]
+};
+
+// ── STATE ────────────────────────────────────────────────────
+let S = {xp:0, completedDays:[], badges:[]};
+let curDay = null;
+let mgState = {};
+
+function saveS(){localStorage.setItem('ac_s', JSON.stringify(S))}
+function loadS(){const r=localStorage.getItem('ac_s');if(r)S={...S,...JSON.parse(r)}}
+
+// ── DATE HELPERS ─────────────────────────────────────────────
+function dayStatus(i){
+  const today=new Date();today.setHours(0,0,0,0);
+  const dd=new Date(START);dd.setDate(dd.getDate()+i);
+  if(S.completedDays.includes(i+1))return'completed';
+  if(today>=dd)return'available';
+  return'locked';
+}
+function fmtDate(i){
+  const d=new Date(START);d.setDate(d.getDate()+i);
+  return `${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ── XP / LEVELS ──────────────────────────────────────────────
+function curLvl(){
+  let l=0;
+  for(let i=LEVELS.length-1;i>=0;i--){if(S.xp>=LEVELS[i].xp){l=i;break}}
+  return l;
+}
+function nextLvlXP(){const l=curLvl();return l>=LEVELS.length-1?LEVELS[l].xp:LEVELS[l+1].xp}
+
+function updateHeader(){
+  const l=curLvl();
+  document.getElementById('lvlDisp').textContent=`Рівень ${l+1} — ${LEVELS[l].name}`;
+  const nl=LEVELS[l].xp, nx=nextLvlXP();
+  const pct=l>=LEVELS.length-1?100:Math.min(100,((S.xp-nl)/(nx-nl))*100);
+  document.getElementById('xpBar').style.width=pct+'%';
+  document.getElementById('xpTxt').textContent=l>=LEVELS.length-1
+    ?`${S.xp} XP — МАКСИМАЛЬНИЙ РІВЕНЬ 🏆`
+    :`${S.xp} / ${nx} XP`;
+  renderBadges();
+}
+
+// ── BADGES ───────────────────────────────────────────────────
+function checkBadges(day){
+  const b=BADGE_DEFS.find(x=>x.day===day);
+  if(b&&!S.badges.includes(day)){
+    S.badges.push(day);saveS();renderBadges();
+    setTimeout(()=>showBadgeNotif(b),1600);
+  }
+}
+function renderBadges(){
+  document.getElementById('bdgWrap').innerHTML=BADGE_DEFS.map(b=>{
+    const e=S.badges.includes(b.day);
+    return `<div class="badge${e?' earned':''}" title="${b.desc}">${b.icon} ${b.name}</div>`;
+  }).join('');
+}
+
+// ── GRID ─────────────────────────────────────────────────────
+function renderGrid(){
+  document.getElementById('grid').innerHTML=DAYS.map((day,i)=>{
+    const st=dayStatus(i);
+    return `<div class="cell ${st}" onclick="openDay(${i})">
+      ${st==='locked'?'<span class="corner-icon">🔒</span>':''}
+      ${st==='completed'?'<span class="corner-icon">✅</span>':''}
+      <div class="cell-num">${day.d}</div>
+      <div class="cell-emoji">${day.e}</div>
+      <div class="cell-name">${day.p.split(' ')[0]}</div>
+      <div class="cell-date">${fmtDate(i)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openDay(i){
+  const st=dayStatus(i);
+  if(st==='locked'){
+    const d=DAYS[i];
+    alert(`🔒 День ${d.d} відкриється ${fmtDate(i)}. Продовжуй тренування!`);
+    return;
+  }
+  curDay=i; mgState={};
+  const day=DAYS[i], done=st==='completed';
+
+  let html=`
+    <div class="modal-dh">День ${day.d} &bull; ${fmtDate(i)}</div>
+    <div class="pcard">
+      <span class="pemoji">${day.e}</span>
+      <div class="pname">${day.p}</div>
+      <div class="pmeta">
+        <span class="ptag">${day.c}</span>
+        <span class="ptag">${day.pos}</span>
+      </div>
+    </div>
+    ${done?'<div class="done-ind">✅ День виконано!</div>':''}
+    <div class="sec">🌟 Факт про гравця</div>
+    <div class="fbox">${day.pf}</div>
+    <div class="sec">⚽ Футбольний факт</div>
+    <div class="ffbox">${day.ff}</div>
+    <div class="qbox">
+      <div class="qtitle">🏃 Щоденний квест</div>
+      <div class="qdesc">${day.q}</div>
+      <div class="qxp">💰 Нагорода: ${day.qxp}–${day.bxp} XP${day.mg?' + бонус за міні-гру':''}</div>
+    </div>`;
+
+  if(day.mg && !done){
+    const mgLabels={hitball:"⚽ Влуч у м'яч!",memory:'🃏 Знайди пару!',quiz:'❓ Вікторина!'};
+    html+=`<button class="btn btn-cyan" id="mgBtn" onclick="launchMG('${day.mg}',${i})" style="margin-top:12px">
+      🎮 Грай: ${mgLabels[day.mg]}
+    </button>
+    <div id="mgArea"></div>`;
+  }
+
+  if(!done){
+    html+=`<button class="btn btn-green" id="doneBtn" onclick="completeDay(${i})">
+      ✅ Квест виконано! +${day.qxp} XP
+    </button>`;
+  } else {
+    html+=`<button class="btn btn-gold" onclick="closeModal()">Закрити</button>`;
+  }
+
+  document.getElementById('mcontent').innerHTML=html;
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('on');
+  stopMG();
+  curDay=null;
+}
+
+function completeDay(i){
+  const day=DAYS[i];
+  if(S.completedDays.includes(day.d))return;
+  S.completedDays.push(day.d);
+
+  const mile={7:100,14:100,21:150,30:200};
+  const bonus=mile[day.d]||0;
+  const mgXP=mgState.earned||0;
+  const total=day.qxp+mgXP+bonus;
+
+  S.xp+=total; saveS(); updateHeader();
+  checkBadges(day.d);
+  showXPNotif(`+${total} XP${bonus?` (рубіж +${bonus}!)`:''}`);
+
+  if(day.d===30){setTimeout(champCelebration,400)}else{confetti()}
+  renderGrid(); closeModal();
+}
+
+// ── MINI-GAMES ───────────────────────────────────────────────
+function launchMG(type,i){
+  const btn=document.getElementById('mgBtn');
+  if(btn)btn.style.display='none';
+  const area=document.getElementById('mgArea');
+  if(type==='hitball')startHitBall(area,i);
+  else if(type==='memory')startMemory(area,i);
+  else startQuiz(area,i);
+}
+
+function stopMG(){
+  if(mgState.t1)clearInterval(mgState.t1);
+  if(mgState.t2)clearInterval(mgState.t2);
+  mgState={};
+}
+
+/* HIT THE BALL */
+function startHitBall(area,i){
+  mgState={score:0,alive:true,t1:null,t2:null,earned:0};
+  area.innerHTML=`
+    <div class="mga">
+      <div class="gscore">Влучань: <span id="hs">0</span></div>
+      <div class="gtimer">Час: <span id="ht">15</span> с</div>
+      <div class="ball-area" id="barea"></div>
+      <div id="hres" style="text-align:center;margin-top:10px;min-height:24px"></div>
+    </div>`;
+
+  let t=15;
+  mgState.t1=setInterval(()=>{
+    t--;document.getElementById('ht').textContent=t;
+    if(t<=0){
+      clearInterval(mgState.t1);clearInterval(mgState.t2);
+      mgState.alive=false;
+      finishHitBall(i);
+    }
+  },1000);
+
+  function spawn(){
+    if(!mgState.alive)return;
+    const ba=document.getElementById('barea');if(!ba)return;
+    const b=document.createElement('div');
+    b.className='ball';b.textContent='⚽';
+    b.style.left=Math.floor(Math.random()*80)+'%';
+    b.style.top=Math.floor(Math.random()*68)+'%';
+    b.onclick=()=>{
+      if(!mgState.alive)return;
+      mgState.score++;
+      document.getElementById('hs').textContent=mgState.score;
+      b.remove();
+    };
+    ba.appendChild(b);
+    setTimeout(()=>{if(b.parentNode)b.remove()},1800);
+  }
+  mgState.t2=setInterval(spawn,650);spawn();
+}
+
+function finishHitBall(dayIdx){
+  const sc=mgState.score, xp=Math.min(Math.round(sc*5),50);
+  mgState.earned=xp;
+  const res=document.getElementById('hres');
+  if(res)res.innerHTML=`🎉 Ти влучив <b>${sc}</b> разів! <span style="color:var(--cyan)">+${xp} бонусних XP</span>`;
+  updateDoneBtn(dayIdx,xp);
+}
+
+/* MEMORY */
+function startMemory(area,i){
+  const SYM=['⚽','🥅','🏆','👟','🥇','🎯','⭐','🦁'];
+  const cards=[...SYM,...SYM].sort(()=>Math.random()-.5);
+  mgState={flip:[],matched:0,canFlip:true,t0:Date.now(),earned:0};
+
+  area.innerHTML=`
+    <div class="mga">
+      <div class="gscore" style="margin-bottom:8px">Пари: <span id="ms">0</span> / 8</div>
+      <div class="mem-grid" id="mgrid"></div>
+      <div id="mres" style="text-align:center;margin-top:10px;min-height:24px"></div>
+    </div>`;
+
+  const g=document.getElementById('mgrid');
+  cards.forEach((sym,ci)=>{
+    const c=document.createElement('div');c.className='mcard';
+    c.dataset.sym=sym;c.dataset.idx=ci;
+    c.innerHTML=`<div class="mcard-in"><div class="mcard-f">❓</div><div class="mcard-b">${sym}</div></div>`;
+    c.onclick=()=>flipCard(c,i);
+    g.appendChild(c);
+  });
+}
+
+function flipCard(card,dayIdx){
+  if(!mgState.canFlip)return;
+  if(card.classList.contains('flip')||card.classList.contains('match'))return;
+  card.classList.add('flip');mgState.flip.push(card);
+  if(mgState.flip.length===2){
+    mgState.canFlip=false;
+    const[a,b]=mgState.flip;
+    if(a.dataset.sym===b.dataset.sym){
+      a.classList.add('match');b.classList.add('match');
+      mgState.matched++;document.getElementById('ms').textContent=mgState.matched;
+      mgState.flip=[];mgState.canFlip=true;
+      if(mgState.matched===8){
+        const secs=Math.round((Date.now()-mgState.t0)/1000);
+        const xp=Math.max(50-Math.floor(secs/5),15);
+        mgState.earned=xp;
+        const r=document.getElementById('mres');
+        if(r)r.innerHTML=`🎉 Всі пари за <b>${secs}с</b>! <span style="color:var(--cyan)">+${xp} бонусних XP</span>`;
+        updateDoneBtn(dayIdx,xp);
+      }
+    } else {
+      setTimeout(()=>{a.classList.remove('flip');b.classList.remove('flip');mgState.flip=[];mgState.canFlip=true},950);
+    }
+  }
+}
+
+/* QUIZ */
+function startQuiz(area,i){
+  const key=DAYS[i].d===17?'q17':'q24';
+  mgState={cur:0,score:0,qs:QUIZZES[key],dayIdx:i,earned:0};
+  renderQQ(area);
+}
+
+function renderQQ(area){
+  const{cur,qs}=mgState,q=qs[cur];
+  area.innerHTML=`
+    <div class="mga">
+      <div class="qprog">Питання ${cur+1} / ${qs.length}</div>
+      <div class="qqst">${q.q}</div>
+      <div class="qopts">
+        ${q.o.map((op,oi)=>`<div class="qopt" onclick="answerQ(${oi},this)">${op}</div>`).join('')}
+      </div>
+      <div class="qfeed" id="qf"></div>
+    </div>`;
+}
+
+function answerQ(idx,el){
+  const{cur,qs,dayIdx}=mgState,q=qs[cur];
+  document.querySelectorAll('.qopt').forEach(o=>o.style.pointerEvents='none');
+  const correct=idx===q.c;
+  el.classList.add(correct?'ok':'no');
+  if(!correct)document.querySelectorAll('.qopt')[q.c].classList.add('ok');
+  const f=document.getElementById('qf');
+  if(f)f.innerHTML=correct
+    ?'<span style="color:var(--green)">✅ Правильно!</span>'
+    :'<span style="color:#f66">❌ Не вірно!</span>';
+  if(correct)mgState.score++;
+
+  setTimeout(()=>{
+    mgState.cur++;
+    if(mgState.cur>=qs.length){
+      const{score,qs:q2,dayIdx:di}=mgState;
+      const xp=Math.round((score/q2.length)*45)+5;
+      mgState.earned=xp;
+      const area=document.getElementById('mgArea');
+      if(area)area.innerHTML=`
+        <div class="mga" style="text-align:center">
+          <div style="font-size:2.2em;margin-bottom:8px">${score===q2.length?'🏆':score>=3?'⭐':'📚'}</div>
+          <div style="font-size:1.15em;font-weight:bold;color:var(--gold);margin-bottom:4px">${score} з ${q2.length} правильних!</div>
+          <div style="color:var(--cyan)">+${xp} бонусних XP</div>
+        </div>`;
+      updateDoneBtn(di,xp);
+    } else {
+      const a=document.getElementById('mgArea');if(a)renderQQ(a);
+    }
+  },1200);
+}
+
+function updateDoneBtn(i,xp){
+  const btn=document.getElementById('doneBtn');
+  if(btn){
+    const day=DAYS[i];
+    btn.textContent=`✅ Квест + міні-гра виконані! +${day.qxp+xp} XP`;
+  }
+}
+
+// ── NOTIFICATIONS ────────────────────────────────────────────
+function showXPNotif(txt){
+  const el=document.createElement('div');el.className='xp-notif';el.textContent=txt;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),2300);
+}
+function showLvlNotif(l){
+  const el=document.createElement('div');el.className='badge-notif';
+  el.innerHTML=`🆙 Новий рівень!<br><strong>${LEVELS[l].name}</strong>`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3300);
+}
+function showBadgeNotif(b){
+  const el=document.createElement('div');el.className='badge-notif';
+  el.innerHTML=`${b.icon} Новий бейдж!<br><strong>${b.name}</strong><br><small>${b.desc}</small>`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3300);
+}
+function champCelebration(){
+  for(let i=0;i<6;i++)setTimeout(confetti,i*350);
+  const el=document.createElement('div');el.className='champ-notif';
+  el.innerHTML=`🏆 ВІТАЄМО!<br><strong>Ти — ЧЕМПІОН АКАДЕМІЇ!</strong><br><small>Всі 30 днів виконано!</small>`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),5200);
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────
+function confetti(){
+  const w=document.getElementById('confWrap');
+  const cols=['#FFD700','#FF6B6B','#4CAF50','#2196F3','#FF9800','#E91E63','#00BCD4'];
+  for(let i=0;i<70;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div');p.className='cp';
+      p.style.cssText=`left:${Math.random()*100}vw;
+        background:${cols[Math.floor(Math.random()*cols.length)]};
+        border-radius:${Math.random()>.5?'50%':'2px'};
+        width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;
+        animation-duration:${Math.random()*2+1.5}s`;
+      w.appendChild(p);setTimeout(()=>p.remove(),4000);
+    },i*25);
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.getElementById('overlay').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
+loadS();renderGrid();updateHeader();
+</script>
+</body>
+</html>
